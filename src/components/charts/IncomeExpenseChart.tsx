@@ -1,61 +1,131 @@
 import { useMemo } from 'react';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Tooltip, Legend } from 'recharts';
 import { useFinance } from '@/contexts/FinanceContext';
 import { formatCurrency } from '@/data/currencies';
-import { format, subMonths, startOfMonth, endOfMonth } from 'date-fns';
+import { subMonths, startOfMonth, endOfMonth, format, subWeeks, startOfWeek, endOfWeek, startOfYear } from 'date-fns';
 
-export const IncomeExpenseChart = () => {
+interface IncomeExpenseChartProps {
+  period?: 'weekly' | 'monthly' | 'yearly';
+}
+
+export const IncomeExpenseChart = ({ period = 'monthly' }: IncomeExpenseChartProps) => {
   const { transactions, defaultCurrency } = useFinance();
 
   const data = useMemo(() => {
-    const months = [];
     const now = new Date();
+    const dataPoints: { label: string; income: number; expenses: number }[] = [];
     
-    for (let i = 5; i >= 0; i--) {
-      const monthDate = subMonths(now, i);
-      const monthStart = startOfMonth(monthDate);
-      const monthEnd = endOfMonth(monthDate);
-      
-      const monthTransactions = transactions.filter(t => {
-        const date = new Date(t.date);
-        return date >= monthStart && date <= monthEnd;
-      });
-
-      const income = monthTransactions
-        .filter(t => t.type === 'income')
-        .reduce((sum, t) => sum + t.amount, 0);
+    if (period === 'weekly') {
+      // Last 4 weeks
+      for (let i = 3; i >= 0; i--) {
+        const weekDate = subWeeks(now, i);
+        const weekStart = startOfWeek(weekDate);
+        const weekEnd = endOfWeek(weekDate);
         
-      const expenses = monthTransactions
-        .filter(t => t.type === 'expense')
-        .reduce((sum, t) => sum + t.amount, 0);
+        const weekTransactions = transactions.filter(t => {
+          const date = new Date(t.date);
+          return date >= weekStart && date <= weekEnd;
+        });
 
-      months.push({
-        month: format(monthDate, 'MMM'),
-        income,
-        expenses,
-      });
+        const income = weekTransactions
+          .filter(t => t.type === 'income')
+          .reduce((sum, t) => sum + t.amount, 0);
+          
+        const expenses = weekTransactions
+          .filter(t => t.type === 'expense')
+          .reduce((sum, t) => sum + t.amount, 0);
+
+        dataPoints.push({
+          label: `Week ${4 - i}`,
+          income,
+          expenses,
+        });
+      }
+    } else if (period === 'yearly') {
+      // Last 12 months
+      for (let i = 11; i >= 0; i--) {
+        const monthDate = subMonths(now, i);
+        const monthStart = startOfMonth(monthDate);
+        const monthEnd = endOfMonth(monthDate);
+        
+        const monthTransactions = transactions.filter(t => {
+          const date = new Date(t.date);
+          return date >= monthStart && date <= monthEnd;
+        });
+
+        const income = monthTransactions
+          .filter(t => t.type === 'income')
+          .reduce((sum, t) => sum + t.amount, 0);
+          
+        const expenses = monthTransactions
+          .filter(t => t.type === 'expense')
+          .reduce((sum, t) => sum + t.amount, 0);
+
+        dataPoints.push({
+          label: format(monthDate, 'MMM'),
+          income,
+          expenses,
+        });
+      }
+    } else {
+      // Monthly - last 6 months
+      for (let i = 5; i >= 0; i--) {
+        const monthDate = subMonths(now, i);
+        const monthStart = startOfMonth(monthDate);
+        const monthEnd = endOfMonth(monthDate);
+        
+        const monthTransactions = transactions.filter(t => {
+          const date = new Date(t.date);
+          return date >= monthStart && date <= monthEnd;
+        });
+
+        const income = monthTransactions
+          .filter(t => t.type === 'income')
+          .reduce((sum, t) => sum + t.amount, 0);
+          
+        const expenses = monthTransactions
+          .filter(t => t.type === 'expense')
+          .reduce((sum, t) => sum + t.amount, 0);
+
+        dataPoints.push({
+          label: format(monthDate, 'MMM'),
+          income,
+          expenses,
+        });
+      }
     }
     
-    return months;
-  }, [transactions]);
+    return dataPoints;
+  }, [transactions, period]);
+
+  const hasData = data.some(d => d.income > 0 || d.expenses > 0);
+
+  if (!hasData) {
+    return (
+      <div className="chart-container">
+        <h3 className="font-semibold mb-4">Income vs Expenses</h3>
+        <div className="h-[200px] flex items-center justify-center text-muted-foreground text-sm">
+          No data for this period
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="chart-container">
       <h3 className="font-semibold mb-4">Income vs Expenses</h3>
       <div className="h-[200px]">
         <ResponsiveContainer width="100%" height="100%">
-          <BarChart data={data} barGap={4}>
-            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
+          <BarChart data={data}>
+            <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
             <XAxis 
-              dataKey="month" 
-              axisLine={false}
-              tickLine={false}
-              tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }}
+              dataKey="label" 
+              tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }}
+              axisLine={{ stroke: 'hsl(var(--border))' }}
             />
             <YAxis 
-              axisLine={false}
-              tickLine={false}
-              tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }}
+              tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }}
+              axisLine={{ stroke: 'hsl(var(--border))' }}
               tickFormatter={(value) => `${(value / 1000).toFixed(0)}k`}
             />
             <Tooltip 
@@ -66,20 +136,9 @@ export const IncomeExpenseChart = () => {
                 boxShadow: '0 4px 20px rgba(0,0,0,0.1)',
               }}
             />
-            <Bar 
-              dataKey="income" 
-              name="Income"
-              fill="hsl(var(--income))" 
-              radius={[4, 4, 0, 0]}
-              maxBarSize={30}
-            />
-            <Bar 
-              dataKey="expenses" 
-              name="Expenses"
-              fill="hsl(var(--expense))" 
-              radius={[4, 4, 0, 0]}
-              maxBarSize={30}
-            />
+            <Legend />
+            <Bar dataKey="income" name="Income" fill="hsl(145 65% 42%)" radius={[4, 4, 0, 0]} />
+            <Bar dataKey="expenses" name="Expenses" fill="hsl(0 75% 55%)" radius={[4, 4, 0, 0]} />
           </BarChart>
         </ResponsiveContainer>
       </div>
