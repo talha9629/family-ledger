@@ -4,7 +4,7 @@ import "./index.css";
 
 createRoot(document.getElementById("root")!).render(<App />);
 
-// Register Service Worker for PWA functionality
+// Register Service Worker for PWA functionality and offline support
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker
@@ -20,7 +20,10 @@ if ('serviceWorker' in navigator) {
           newWorker?.addEventListener('statechange', () => {
             if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
               console.log('✨ New content available, please refresh');
-              // You could show a notification to the user here
+              // Optional: Show a notification to the user
+              if (confirm('New version available! Reload to update?')) {
+                window.location.reload();
+              }
             }
           });
         });
