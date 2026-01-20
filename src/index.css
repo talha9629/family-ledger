@@ -163,14 +163,6 @@
     --sidebar-border: 220 20% 18%;
     --sidebar-ring: 168 65% 50%;
   }
-
-  /* Hide the Lovable "Edit with" badge */
-  #lovable-badge {
-    display: none !important;
-    visibility: hidden !important;
-    opacity: 0 !important;
-    pointer-events: none !important;
-  }
 }
 
 @layer base {
