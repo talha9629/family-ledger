@@ -3,7 +3,7 @@ import { PageHeader } from '@/components/layout/PageHeader';
 import { SpendingPieChart } from '@/components/charts/SpendingPieChart';
 import { IncomeExpenseChart } from '@/components/charts/IncomeExpenseChart';
 import { SavingsTrendChart } from '@/components/charts/SavingsTrendChart';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -13,7 +13,7 @@ import { useFinance } from '@/contexts/FinanceContext';
 import { getCategoriesByType, getCategoryById } from '@/data/categories';
 import { formatCurrency } from '@/data/currencies';
 import { format, parseISO, isWithinInterval, startOfMonth, endOfMonth, startOfWeek, endOfWeek, startOfYear, endOfYear } from 'date-fns';
-import { CalendarIcon, Filter, TrendingDown, TrendingUp } from 'lucide-react';
+import { CalendarIcon, Filter } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import * as Icons from 'lucide-react';
 
@@ -99,7 +99,7 @@ export const AnalyticsPage = () => {
       {/* Period Tabs */}
       <div className="px-4 mb-4">
         <Tabs value={period} onValueChange={(v) => {
-          setPeriod(v as any);
+          setPeriod(v as 'weekly' | 'monthly' | 'yearly');
           setShowCustomDates(false);
         }}>
           <TabsList className="w-full">
@@ -271,11 +271,11 @@ export const AnalyticsPage = () => {
         </div>
       )}
 
-      {/* Charts */}
+      {/* Charts - now with period prop */}
       <div className="px-4 space-y-4">
         <SpendingPieChart period={period} />
-        <IncomeExpenseChart />
-        <SavingsTrendChart />
+        <IncomeExpenseChart period={period} />
+        <SavingsTrendChart period={period} />
       </div>
     </div>
   );

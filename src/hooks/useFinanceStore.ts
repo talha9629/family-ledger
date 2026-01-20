@@ -353,6 +353,37 @@ export const useFinanceStore = () => {
     }));
   }, []);
 
+  // Budget operations
+  const addBudget = useCallback((budget: Omit<Budget, 'id' | 'createdAt' | 'updatedAt'>) => {
+    const newBudget: Budget = {
+      ...budget,
+      id: crypto.randomUUID(),
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+    setState(prev => ({
+      ...prev,
+      budgets: [newBudget, ...prev.budgets],
+    }));
+    return newBudget;
+  }, []);
+
+  const updateBudget = useCallback((id: string, updates: Partial<Budget>) => {
+    setState(prev => ({
+      ...prev,
+      budgets: prev.budgets.map(b => 
+        b.id === id ? { ...b, ...updates, updatedAt: new Date().toISOString() } : b
+      ),
+    }));
+  }, []);
+
+  const deleteBudget = useCallback((id: string) => {
+    setState(prev => ({
+      ...prev,
+      budgets: prev.budgets.filter(b => b.id !== id),
+    }));
+  }, []);
+
   // Category operations
   const addCategory = useCallback((category: Omit<Category, 'id'>) => {
     const newCategory: Category = {
@@ -430,6 +461,9 @@ export const useFinanceStore = () => {
     addSavingsGoal,
     updateSavingsGoal,
     deleteSavingsGoal,
+    addBudget,
+    updateBudget,
+    deleteBudget,
     addCategory,
     addChatMessage,
     clearChatHistory,

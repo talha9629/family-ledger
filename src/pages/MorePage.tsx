@@ -5,10 +5,9 @@ import { currencies } from '@/data/currencies';
 import { CurrencyCode } from '@/types/finance';
 import { 
   ChevronRight, Download, Upload, Trash2, Target, 
-  BarChart2, Coins, Bell, Palette
+  BarChart2, Coins, Bell, Palette, Wallet, Settings
 } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Switch } from '@/components/ui/switch';
 import { toast } from 'sonner';
 
 export const MorePage = () => {
@@ -71,6 +70,7 @@ export const MorePage = () => {
       items: [
         { icon: Target, label: 'Savings Goals', path: '/goals' },
         { icon: BarChart2, label: 'Analytics', path: '/analytics' },
+        { icon: Wallet, label: 'Budget Tracker', path: '/budgets' },
       ]
     },
     {
@@ -81,8 +81,7 @@ export const MorePage = () => {
           label: 'Default Currency', 
           action: 'currency' 
         },
-        { icon: Bell, label: 'Notifications', action: 'notifications' },
-        { icon: Palette, label: 'Appearance', action: 'appearance' },
+        { icon: Settings, label: 'All Settings', path: '/settings' },
       ]
     },
     {
@@ -105,12 +104,6 @@ export const MorePage = () => {
         break;
       case 'clear':
         handleClearData();
-        break;
-      case 'notifications':
-        toast.info('Notification settings coming soon!');
-        break;
-      case 'appearance':
-        toast.info('Theme settings coming soon!');
         break;
     }
   };
@@ -189,6 +182,9 @@ export const MorePage = () => {
           <p className="text-xs text-muted-foreground">Version 1.0.0</p>
           <p className="text-xs text-muted-foreground mt-1">
             Made with ❤️ for your family's financial wellness
+          </p>
+          <p className="text-xs text-muted-foreground mt-2">
+            📱 Works 100% offline - your data stays on device
           </p>
         </div>
       </div>
