@@ -5,8 +5,7 @@ import { currencies } from '@/data/currencies';
 import { CurrencyCode } from '@/types/finance';
 import { 
   ChevronRight, Download, Upload, Trash2, Target, 
-  BarChart2, Settings, Coins, FileText, HelpCircle,
-  Shield, Bell, Palette
+  BarChart2, Coins, Bell, Palette
 } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
@@ -72,7 +71,6 @@ export const MorePage = () => {
       items: [
         { icon: Target, label: 'Savings Goals', path: '/goals' },
         { icon: BarChart2, label: 'Analytics', path: '/analytics' },
-        { icon: FileText, label: 'Reports', path: '/reports' },
       ]
     },
     {
@@ -93,13 +91,6 @@ export const MorePage = () => {
         { icon: Download, label: 'Export Data', action: 'export' },
         { icon: Upload, label: 'Import Data', action: 'import' },
         { icon: Trash2, label: 'Clear All Data', action: 'clear', danger: true },
-      ]
-    },
-    {
-      title: 'Help & Support',
-      items: [
-        { icon: HelpCircle, label: 'How to Use', path: '/help' },
-        { icon: Shield, label: 'Privacy Policy', path: '/privacy' },
       ]
     },
   ];

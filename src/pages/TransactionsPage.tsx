@@ -127,7 +127,11 @@ export const TransactionsPage = () => {
               </h3>
               <div className="space-y-2">
                 {txns.map(t => (
-                  <TransactionItem key={t.id} transaction={t} />
+                  <TransactionItem 
+                    key={t.id} 
+                    transaction={t} 
+                    onClick={() => navigate(`/transaction/${t.id}`)}
+                  />
                 ))}
               </div>
             </div>
