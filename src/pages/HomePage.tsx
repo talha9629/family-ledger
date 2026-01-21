@@ -56,12 +56,14 @@ export const HomePage = () => {
 
       {/* Balance Overview */}
       <div className="px-4 mb-6">
-        <div className="bg-gradient-to-br from-primary to-primary/80 rounded-3xl p-6 text-primary-foreground shadow-float">
-          <p className="text-sm font-medium opacity-90">This Month's Balance</p>
-          <h2 className="text-3xl font-bold mt-1">
+        <div className="bg-gradient-to-br from-primary via-primary to-primary/80 rounded-3xl p-6 text-primary-foreground shadow-xl relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2" />
+          <div className="absolute bottom-0 left-0 w-24 h-24 bg-white/5 rounded-full translate-y-1/2 -translate-x-1/2" />
+          <p className="text-sm font-medium opacity-90 relative">This Month's Balance</p>
+          <h2 className="text-4xl font-bold mt-2 relative">
             {formatCurrency(stats.balance, defaultCurrency)}
           </h2>
-          <p className="text-xs opacity-75 mt-2">
+          <p className="text-sm opacity-80 mt-3 relative">
             {stats.balance >= 0 ? '✨ Great job managing your finances!' : '⚠️ Your expenses exceed your income'}
           </p>
         </div>

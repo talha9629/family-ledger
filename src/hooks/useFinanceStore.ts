@@ -322,6 +322,21 @@ export const useFinanceStore = () => {
     }));
   }, []);
 
+  const removeCommitteePayment = useCallback((committeeId: string, month: number) => {
+    setState(prev => ({
+      ...prev,
+      committees: prev.committees.map(c => 
+        c.id === committeeId 
+          ? { 
+              ...c, 
+              payments: c.payments.filter(p => p.month !== month),
+              updatedAt: new Date().toISOString() 
+            } 
+          : c
+      ),
+    }));
+  }, []);
+
   // Savings Goal operations
   const addSavingsGoal = useCallback((goal: Omit<SavingsGoal, 'id' | 'createdAt' | 'updatedAt'>) => {
     const newGoal: SavingsGoal = {
@@ -458,6 +473,7 @@ export const useFinanceStore = () => {
     updateCommittee,
     deleteCommittee,
     addCommitteePayment,
+    removeCommitteePayment,
     addSavingsGoal,
     updateSavingsGoal,
     deleteSavingsGoal,

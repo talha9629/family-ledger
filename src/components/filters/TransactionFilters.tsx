@@ -8,6 +8,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/co
 import { TransactionFilter, TransactionType } from '@/types/finance';
 import { defaultCategories, getCategoriesByType } from '@/data/categories';
 import { Badge } from '@/components/ui/badge';
+import { cn } from '@/lib/utils';
 
 interface TransactionFiltersProps {
   filter: TransactionFilter;
@@ -101,8 +102,8 @@ export const TransactionFilters = ({ filter, onFilterChange }: TransactionFilter
             
             <div className="mt-6 space-y-6 overflow-y-auto">
               {/* Period */}
-              <div className="space-y-2">
-                <Label>Time Period</Label>
+              <div className="space-y-3">
+                <Label className="font-semibold text-sm">Time Period</Label>
                 <div className="flex flex-wrap gap-2">
                   {(['daily', 'weekly', 'monthly', 'yearly', 'custom'] as const).map(period => (
                     <Button
@@ -110,6 +111,10 @@ export const TransactionFilters = ({ filter, onFilterChange }: TransactionFilter
                       variant={filter.period === period ? 'default' : 'outline'}
                       size="sm"
                       onClick={() => handlePeriodChange(period)}
+                      className={cn(
+                        "min-w-[70px] font-medium",
+                        filter.period !== period && "border-2 hover:border-primary/50 hover:bg-primary/5"
+                      )}
                     >
                       {period.charAt(0).toUpperCase() + period.slice(1)}
                     </Button>
@@ -140,8 +145,8 @@ export const TransactionFilters = ({ filter, onFilterChange }: TransactionFilter
               )}
 
               {/* Transaction Type */}
-              <div className="space-y-2">
-                <Label>Type</Label>
+              <div className="space-y-3">
+                <Label className="font-semibold text-sm">Type</Label>
                 <div className="flex gap-2">
                   {(['income', 'expense', 'savings'] as TransactionType[]).map(type => (
                     <Button
@@ -153,6 +158,13 @@ export const TransactionFilters = ({ filter, onFilterChange }: TransactionFilter
                         type: filter.type === type ? undefined : type,
                         categoryId: undefined 
                       })}
+                      className={cn(
+                        "flex-1 font-medium",
+                        filter.type !== type && "border-2 hover:border-primary/50 hover:bg-primary/5",
+                        filter.type === type && type === 'income' && "bg-income hover:bg-income/90",
+                        filter.type === type && type === 'expense' && "bg-expense hover:bg-expense/90",
+                        filter.type === type && type === 'savings' && "bg-savings hover:bg-savings/90"
+                      )}
                     >
                       {type.charAt(0).toUpperCase() + type.slice(1)}
                     </Button>

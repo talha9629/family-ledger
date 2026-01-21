@@ -20,11 +20,11 @@ export const TransactionItem = ({ transaction, onClick }: TransactionItemProps) 
 
   return (
     <div 
-      className="transaction-item cursor-pointer"
+      className="transaction-item group"
       onClick={onClick}
     >
       <div 
-        className="p-2.5 rounded-xl"
+        className="p-3 rounded-xl transition-transform group-hover:scale-105"
         style={{ 
           backgroundColor: category ? `${category.color}15` : 'hsl(var(--muted))',
         }}
@@ -37,28 +37,28 @@ export const TransactionItem = ({ transaction, onClick }: TransactionItemProps) 
       
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">
-          <h4 className="font-medium text-sm truncate">
+          <h4 className="font-semibold text-sm truncate">
             {category?.name || 'Unknown'}
           </h4>
           {transaction.attachmentUrl && (
             <Image className="h-3.5 w-3.5 text-muted-foreground" />
           )}
         </div>
-        <p className="text-xs text-muted-foreground truncate">
+        <p className="text-xs text-muted-foreground truncate mt-0.5">
           {transaction.description}
         </p>
       </div>
       
       <div className="text-right">
         <p className={cn(
-          'font-semibold text-sm',
+          'font-bold text-sm',
           isIncome && 'text-income',
           !isIncome && !isSavings && 'text-expense',
           isSavings && 'text-savings'
         )}>
           {isIncome ? '+' : '-'}{formatCurrency(transaction.amount, transaction.currency)}
         </p>
-        <p className="text-xs text-muted-foreground">
+        <p className="text-[11px] text-muted-foreground mt-0.5">
           {format(new Date(transaction.date), 'MMM d')}
         </p>
       </div>
