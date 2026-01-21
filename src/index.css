@@ -184,7 +184,7 @@
 @layer components {
   /* Stat Cards */
   .stat-card {
-    @apply rounded-2xl p-4 transition-all duration-300;
+    @apply rounded-2xl p-5 transition-all duration-300;
     box-shadow: var(--shadow-card);
   }
   
@@ -215,12 +215,13 @@
 
   /* Transaction items */
   .transaction-item {
-    @apply flex items-center gap-3 p-3 rounded-xl bg-card transition-all duration-200 hover:shadow-md;
+    @apply flex items-center gap-3 p-4 rounded-xl bg-card transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5 cursor-pointer active:scale-[0.98];
+    box-shadow: var(--shadow-sm);
   }
 
   /* Floating action button */
   .fab {
-    @apply fixed bottom-24 right-4 z-40 h-14 w-14 rounded-full flex items-center justify-center text-primary-foreground transition-all duration-300;
+    @apply fixed bottom-24 right-4 z-40 h-14 w-14 rounded-full flex items-center justify-center text-primary-foreground transition-all duration-300 active:scale-90;
     background: var(--gradient-primary);
     box-shadow: var(--shadow-float);
   }
@@ -235,27 +236,27 @@
 
   /* Bottom navigation */
   .bottom-nav {
-    @apply fixed bottom-0 left-0 right-0 bg-card border-t z-50 px-2 py-2 safe-area-inset-bottom;
-    box-shadow: 0 -4px 20px -2px hsl(220 25% 10% / 0.08);
+    @apply fixed bottom-0 left-0 right-0 bg-card/95 backdrop-blur-lg border-t z-50 px-2 py-2 safe-area-inset-bottom;
+    box-shadow: 0 -4px 20px -2px hsl(220 25% 10% / 0.1);
   }
 
   .nav-item {
-    @apply flex flex-col items-center justify-center gap-1 px-3 py-2 rounded-xl transition-all duration-200 text-muted-foreground;
+    @apply flex flex-col items-center justify-center gap-1 px-3 py-2 rounded-xl transition-all duration-200 text-muted-foreground active:scale-90;
   }
 
   .nav-item.active {
-    @apply text-primary bg-primary-soft;
+    @apply text-primary bg-primary/10 font-medium;
   }
 
   /* Glass effect */
   .glass {
     @apply backdrop-blur-xl;
-    background: hsl(0 0% 100% / 0.8);
+    background: hsl(0 0% 100% / 0.85);
   }
 
   /* Chart containers */
   .chart-container {
-    @apply bg-card rounded-2xl p-4;
+    @apply bg-card rounded-2xl p-5;
     box-shadow: var(--shadow-card);
   }
 
@@ -266,11 +267,11 @@
 
   /* Amount display */
   .amount-income {
-    @apply text-income font-semibold;
+    @apply text-income font-bold;
   }
 
   .amount-expense {
-    @apply text-expense font-semibold;
+    @apply text-expense font-bold;
   }
 
   /* Mobile safe areas */

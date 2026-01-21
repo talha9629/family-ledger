@@ -21,7 +21,7 @@ import { cn } from '@/lib/utils';
 export const CommitteeDetailPage = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { committees, updateCommittee, deleteCommittee, addCommitteePayment, defaultCurrency } = useFinance();
+  const { committees, updateCommittee, deleteCommittee, addCommitteePayment, removeCommitteePayment, defaultCurrency } = useFinance();
   
   const committee = committees.find(c => c.id === id);
   
@@ -98,7 +98,11 @@ export const CommitteeDetailPage = () => {
 
   const handlePayMonth = (month: number) => {
     const isPaid = committee.payments.some(p => p.month === month);
-    if (!isPaid) {
+    if (isPaid) {
+      // Revert payment
+      removeCommitteePayment(committee.id, month);
+      toast.success(`Month ${month} payment reverted!`);
+    } else {
       addCommitteePayment(committee.id, month, new Date().getFullYear(), committee.monthlyAmount);
       toast.success(`Month ${month} marked as paid!`);
     }
@@ -169,35 +173,52 @@ export const CommitteeDetailPage = () => {
         </div>
 
         {/* Payment Timeline */}
-        <div className="space-y-2">
-          <Label>Payment Timeline (tap to mark as paid)</Label>
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <Label className="font-semibold">Payment Timeline</Label>
+            <span className="text-xs text-muted-foreground">Tap to toggle payment</span>
+          </div>
           <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
             {Array.from({ length: committee.totalMembers }, (_, i) => i + 1).map(month => {
               const isPaid = committee.payments.some(p => p.month === month);
               const isMyPayout = month === committee.myPayoutMonth;
-              const isCurrent = month === committee.currentMonth;
               
               return (
                 <button
                   key={month}
                   onClick={() => handlePayMonth(month)}
                   className={cn(
-                    'w-10 h-10 rounded-full flex items-center justify-center text-sm font-medium shrink-0 border-2 transition-all',
-                    isPaid && 'bg-committee text-committee-foreground border-committee',
-                    !isPaid && month <= committee.currentMonth && 'bg-destructive/20 text-destructive border-destructive',
-                    !isPaid && month > committee.currentMonth && 'bg-muted border-muted hover:border-primary',
+                    'w-12 h-12 rounded-xl flex flex-col items-center justify-center text-sm font-medium shrink-0 border-2 transition-all active:scale-95',
+                    isPaid && 'bg-committee text-committee-foreground border-committee shadow-md',
+                    !isPaid && 'bg-card border-border hover:border-primary/50 hover:bg-primary/5',
                     isMyPayout && 'ring-2 ring-primary ring-offset-2'
                   )}
-                  disabled={isPaid}
                 >
-                  {isPaid ? <CheckCircle2 className="h-4 w-4" /> : month}
+                  {isPaid ? (
+                    <>
+                      <CheckCircle2 className="h-4 w-4" />
+                      <span className="text-[10px] mt-0.5">Paid</span>
+                    </>
+                  ) : (
+                    <>
+                      <span className="font-bold">{month}</span>
+                      <span className="text-[10px] text-muted-foreground">Due</span>
+                    </>
+                  )}
                 </button>
               );
             })}
           </div>
-          <p className="text-xs text-muted-foreground">
-            Your payout month is marked with a ring
-          </p>
+          <div className="flex gap-4 text-xs text-muted-foreground">
+            <div className="flex items-center gap-1.5">
+              <div className="w-3 h-3 rounded bg-committee" />
+              <span>Paid</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <div className="w-3 h-3 rounded border-2 border-primary" />
+              <span>Your payout month</span>
+            </div>
+          </div>
         </div>
 
         {/* Payout Action */}

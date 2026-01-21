@@ -140,50 +140,63 @@ export const AnalyticsPage = () => {
         </div>
 
         {/* Custom Date Range */}
-        <div className="space-y-2">
-          <div className="flex items-center justify-between">
-            <Label className="text-xs text-muted-foreground">Custom Date Range</Label>
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              onClick={() => setShowCustomDates(!showCustomDates)}
-              className="h-6 text-xs"
-            >
-              {showCustomDates ? 'Use Period' : 'Custom Dates'}
-            </Button>
-          </div>
+        <div className="space-y-3">
+          <Button 
+            variant={showCustomDates ? "default" : "outline"}
+            size="sm" 
+            onClick={() => setShowCustomDates(!showCustomDates)}
+            className={cn(
+              "w-full justify-center gap-2 font-medium",
+              showCustomDates 
+                ? "bg-primary text-primary-foreground shadow-md" 
+                : "border-2 border-dashed border-primary/50 text-primary hover:bg-primary/10 hover:border-primary"
+            )}
+          >
+            <CalendarIcon className="h-4 w-4" />
+            {showCustomDates ? 'Using Custom Dates' : 'Select Custom Date Range'}
+          </Button>
           
           {showCustomDates && (
-            <div className="flex gap-2">
+            <div className="flex gap-2 animate-in slide-in-from-top-2 duration-200">
               <Popover>
                 <PopoverTrigger asChild>
-                  <Button variant="outline" size="sm" className="flex-1 justify-start">
-                    <CalendarIcon className="mr-2 h-3 w-3" />
-                    {customStartDate ? format(customStartDate, 'PP') : 'Start'}
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="flex-1 justify-start bg-card border-2 hover:border-primary/50"
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4 text-primary" />
+                    {customStartDate ? format(customStartDate, 'PP') : 'Start Date'}
                   </Button>
                 </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
+                <PopoverContent className="w-auto p-0 z-50" align="start">
                   <Calendar
                     mode="single"
                     selected={customStartDate}
                     onSelect={setCustomStartDate}
                     initialFocus
+                    className={cn("p-3 pointer-events-auto")}
                   />
                 </PopoverContent>
               </Popover>
               <Popover>
                 <PopoverTrigger asChild>
-                  <Button variant="outline" size="sm" className="flex-1 justify-start">
-                    <CalendarIcon className="mr-2 h-3 w-3" />
-                    {customEndDate ? format(customEndDate, 'PP') : 'End'}
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="flex-1 justify-start bg-card border-2 hover:border-primary/50"
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4 text-primary" />
+                    {customEndDate ? format(customEndDate, 'PP') : 'End Date'}
                   </Button>
                 </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
+                <PopoverContent className="w-auto p-0 z-50" align="start">
                   <Calendar
                     mode="single"
                     selected={customEndDate}
                     onSelect={setCustomEndDate}
                     initialFocus
+                    className={cn("p-3 pointer-events-auto")}
                   />
                 </PopoverContent>
               </Popover>

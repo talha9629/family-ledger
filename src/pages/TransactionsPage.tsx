@@ -107,13 +107,13 @@ export const TransactionsPage = () => {
 
       {/* Summary */}
       <div className="flex gap-4 px-4 mb-4">
-        <div className="flex-1 bg-income-soft rounded-xl p-3">
-          <p className="text-xs text-muted-foreground">Income</p>
-          <p className="font-bold text-income">{formatCurrency(summary.income, defaultCurrency)}</p>
+        <div className="flex-1 bg-income/10 rounded-2xl p-4 border border-income/20">
+          <p className="text-xs text-muted-foreground font-medium">Income</p>
+          <p className="font-bold text-lg text-income">{formatCurrency(summary.income, defaultCurrency)}</p>
         </div>
-        <div className="flex-1 bg-expense-soft rounded-xl p-3">
-          <p className="text-xs text-muted-foreground">Expenses</p>
-          <p className="font-bold text-expense">{formatCurrency(summary.expenses, defaultCurrency)}</p>
+        <div className="flex-1 bg-expense/10 rounded-2xl p-4 border border-expense/20">
+          <p className="text-xs text-muted-foreground font-medium">Expenses</p>
+          <p className="font-bold text-lg text-expense">{formatCurrency(summary.expenses, defaultCurrency)}</p>
         </div>
       </div>
 
