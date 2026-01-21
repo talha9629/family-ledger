@@ -5,7 +5,7 @@ import { formatCurrency } from '@/data/currencies';
 import { subMonths, startOfMonth, endOfMonth, format, subWeeks, startOfWeek, endOfWeek } from 'date-fns';
 
 interface SavingsTrendChartProps {
-  period?: 'weekly' | 'monthly' | 'yearly';
+  period?: 'daily' | 'weekly' | 'monthly' | 'yearly';
 }
 
 export const SavingsTrendChart = ({ period = 'monthly' }: SavingsTrendChartProps) => {
@@ -16,7 +16,29 @@ export const SavingsTrendChart = ({ period = 'monthly' }: SavingsTrendChartProps
     const dataPoints: { label: string; savings: number; monthly: number }[] = [];
     let cumulativeSavings = 0;
     
-    if (period === 'weekly') {
+    if (period === 'daily') {
+      // Last 7 days
+      for (let i = 6; i >= 0; i--) {
+        const dayDate = new Date(now.getTime() - i * 24 * 60 * 60 * 1000);
+        const dayStart = new Date(dayDate.getFullYear(), dayDate.getMonth(), dayDate.getDate());
+        const dayEnd = new Date(dayDate.getFullYear(), dayDate.getMonth(), dayDate.getDate(), 23, 59, 59);
+        
+        const daySavings = transactions
+          .filter(t => {
+            const date = new Date(t.date);
+            return t.type === 'savings' && date >= dayStart && date <= dayEnd;
+          })
+          .reduce((sum, t) => sum + t.amount, 0);
+
+        cumulativeSavings += daySavings;
+
+        dataPoints.push({
+          label: format(dayDate, 'EEE'),
+          savings: cumulativeSavings,
+          monthly: daySavings,
+        });
+      }
+    } else if (period === 'weekly') {
       // Last 4 weeks
       for (let i = 3; i >= 0; i--) {
         const weekDate = subWeeks(now, i);

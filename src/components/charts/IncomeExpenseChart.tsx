@@ -5,7 +5,7 @@ import { formatCurrency } from '@/data/currencies';
 import { subMonths, startOfMonth, endOfMonth, format, subWeeks, startOfWeek, endOfWeek, startOfYear } from 'date-fns';
 
 interface IncomeExpenseChartProps {
-  period?: 'weekly' | 'monthly' | 'yearly';
+  period?: 'daily' | 'weekly' | 'monthly' | 'yearly';
 }
 
 export const IncomeExpenseChart = ({ period = 'monthly' }: IncomeExpenseChartProps) => {
@@ -15,7 +15,33 @@ export const IncomeExpenseChart = ({ period = 'monthly' }: IncomeExpenseChartPro
     const now = new Date();
     const dataPoints: { label: string; income: number; expenses: number }[] = [];
     
-    if (period === 'weekly') {
+    if (period === 'daily') {
+      // Last 7 days
+      for (let i = 6; i >= 0; i--) {
+        const dayDate = new Date(now.getTime() - i * 24 * 60 * 60 * 1000);
+        const dayStart = new Date(dayDate.getFullYear(), dayDate.getMonth(), dayDate.getDate());
+        const dayEnd = new Date(dayDate.getFullYear(), dayDate.getMonth(), dayDate.getDate(), 23, 59, 59);
+        
+        const dayTransactions = transactions.filter(t => {
+          const date = new Date(t.date);
+          return date >= dayStart && date <= dayEnd;
+        });
+
+        const income = dayTransactions
+          .filter(t => t.type === 'income')
+          .reduce((sum, t) => sum + t.amount, 0);
+          
+        const expenses = dayTransactions
+          .filter(t => t.type === 'expense')
+          .reduce((sum, t) => sum + t.amount, 0);
+
+        dataPoints.push({
+          label: format(dayDate, 'EEE'),
+          income,
+          expenses,
+        });
+      }
+    } else if (period === 'weekly') {
       // Last 4 weeks
       for (let i = 3; i >= 0; i--) {
         const weekDate = subWeeks(now, i);
