@@ -5,7 +5,7 @@ import { getCategoryById } from '@/data/categories';
 import { formatCurrency } from '@/data/currencies';
 
 interface SpendingPieChartProps {
-  period?: 'weekly' | 'monthly' | 'yearly';
+  period?: 'daily' | 'weekly' | 'monthly' | 'yearly';
 }
 
 export const SpendingPieChart = ({ period = 'monthly' }: SpendingPieChartProps) => {
@@ -16,6 +16,9 @@ export const SpendingPieChart = ({ period = 'monthly' }: SpendingPieChartProps) 
     let startDate: Date;
     
     switch (period) {
+      case 'daily':
+        startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        break;
       case 'weekly':
         startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
         break;

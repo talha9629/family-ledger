@@ -1,29 +1,34 @@
 import { useState, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { SpendingPieChart } from '@/components/charts/SpendingPieChart';
 import { IncomeExpenseChart } from '@/components/charts/IncomeExpenseChart';
 import { SavingsTrendChart } from '@/components/charts/SavingsTrendChart';
+import { TransactionItem } from '@/components/transactions/TransactionItem';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { useFinance } from '@/contexts/FinanceContext';
 import { getCategoriesByType, getCategoryById } from '@/data/categories';
 import { formatCurrency } from '@/data/currencies';
-import { format, parseISO, isWithinInterval, startOfMonth, endOfMonth, startOfWeek, endOfWeek, startOfYear, endOfYear } from 'date-fns';
-import { CalendarIcon, Filter } from 'lucide-react';
+import { format, parseISO, isWithinInterval, startOfMonth, endOfMonth, startOfWeek, endOfWeek, startOfYear, endOfYear, startOfDay, endOfDay } from 'date-fns';
+import { CalendarIcon, Filter, List, ChevronRight, TrendingUp, TrendingDown, PiggyBank } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import * as Icons from 'lucide-react';
 
 export const AnalyticsPage = () => {
+  const navigate = useNavigate();
   const { transactions, defaultCurrency } = useFinance();
-  const [period, setPeriod] = useState<'weekly' | 'monthly' | 'yearly'>('monthly');
+  const [period, setPeriod] = useState<'daily' | 'weekly' | 'monthly' | 'yearly'>('monthly');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [customStartDate, setCustomStartDate] = useState<Date | undefined>();
   const [customEndDate, setCustomEndDate] = useState<Date | undefined>();
   const [showCustomDates, setShowCustomDates] = useState(false);
+  const [showEntriesSheet, setShowEntriesSheet] = useState(false);
 
   const expenseCategories = getCategoriesByType('expense');
 
@@ -36,6 +41,8 @@ export const AnalyticsPage = () => {
     }
     
     switch (period) {
+      case 'daily':
+        return { start: startOfDay(now), end: endOfDay(now) };
       case 'weekly':
         return { start: startOfWeek(now), end: endOfWeek(now) };
       case 'yearly':
@@ -89,6 +96,28 @@ export const AnalyticsPage = () => {
     return { filtered, total, count, categoryBreakdown };
   }, [transactions, selectedCategory, dateRange]);
 
+  // All transactions for the selected period (not just expenses)
+  const allPeriodTransactions = useMemo(() => {
+    return transactions.filter(t => {
+      const transactionDate = parseISO(t.date);
+      return isWithinInterval(transactionDate, { start: dateRange.start, end: dateRange.end });
+    }).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  }, [transactions, dateRange]);
+
+  // Summary for all transactions
+  const periodSummary = useMemo(() => {
+    const income = allPeriodTransactions
+      .filter(t => t.type === 'income')
+      .reduce((sum, t) => sum + t.amount, 0);
+    const expenses = allPeriodTransactions
+      .filter(t => t.type === 'expense')
+      .reduce((sum, t) => sum + t.amount, 0);
+    const savings = allPeriodTransactions
+      .filter(t => t.type === 'savings')
+      .reduce((sum, t) => sum + t.amount, 0);
+    return { income, expenses, savings, total: allPeriodTransactions.length };
+  }, [allPeriodTransactions]);
+
   const selectedCategoryData = selectedCategory !== 'all' ? getCategoryById(selectedCategory) : null;
   const SelectedIcon = selectedCategoryData ? (Icons as any)[selectedCategoryData.icon] || Icons.HelpCircle : null;
 
@@ -99,15 +128,83 @@ export const AnalyticsPage = () => {
       {/* Period Tabs */}
       <div className="px-4 mb-4">
         <Tabs value={period} onValueChange={(v) => {
-          setPeriod(v as 'weekly' | 'monthly' | 'yearly');
+          setPeriod(v as 'daily' | 'weekly' | 'monthly' | 'yearly');
           setShowCustomDates(false);
         }}>
           <TabsList className="w-full">
+            <TabsTrigger value="daily" className="flex-1">Day</TabsTrigger>
             <TabsTrigger value="weekly" className="flex-1">Week</TabsTrigger>
             <TabsTrigger value="monthly" className="flex-1">Month</TabsTrigger>
             <TabsTrigger value="yearly" className="flex-1">Year</TabsTrigger>
           </TabsList>
         </Tabs>
+      </div>
+
+      {/* View All Entries Button */}
+      <div className="px-4 mb-4">
+        <Sheet open={showEntriesSheet} onOpenChange={setShowEntriesSheet}>
+          <SheetTrigger asChild>
+            <Button 
+              variant="outline" 
+              className="w-full justify-between border-2 hover:border-primary/50"
+            >
+              <div className="flex items-center gap-2">
+                <List className="h-4 w-4 text-primary" />
+                <span>View All {period === 'daily' ? "Today's" : period === 'weekly' ? "This Week's" : period === 'monthly' ? "This Month's" : "This Year's"} Entries</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-semibold text-primary">{periodSummary.total}</span>
+                <ChevronRight className="h-4 w-4" />
+              </div>
+            </Button>
+          </SheetTrigger>
+          <SheetContent side="bottom" className="h-[85vh]">
+            <SheetHeader>
+              <SheetTitle>
+                {period === 'daily' ? "Today's" : period === 'weekly' ? "This Week's" : period === 'monthly' ? "This Month's" : "This Year's"} Transactions
+              </SheetTitle>
+            </SheetHeader>
+            
+            {/* Period Summary */}
+            <div className="grid grid-cols-3 gap-3 my-4">
+              <div className="bg-income/10 rounded-xl p-3 text-center border border-income/20">
+                <TrendingUp className="h-4 w-4 text-income mx-auto mb-1" />
+                <p className="text-xs text-muted-foreground">Income</p>
+                <p className="font-bold text-sm text-income">{formatCurrency(periodSummary.income, defaultCurrency)}</p>
+              </div>
+              <div className="bg-expense/10 rounded-xl p-3 text-center border border-expense/20">
+                <TrendingDown className="h-4 w-4 text-expense mx-auto mb-1" />
+                <p className="text-xs text-muted-foreground">Expenses</p>
+                <p className="font-bold text-sm text-expense">{formatCurrency(periodSummary.expenses, defaultCurrency)}</p>
+              </div>
+              <div className="bg-savings/10 rounded-xl p-3 text-center border border-savings/20">
+                <PiggyBank className="h-4 w-4 text-savings mx-auto mb-1" />
+                <p className="text-xs text-muted-foreground">Savings</p>
+                <p className="font-bold text-sm text-savings">{formatCurrency(periodSummary.savings, defaultCurrency)}</p>
+              </div>
+            </div>
+
+            {/* Transactions List */}
+            <div className="overflow-y-auto max-h-[calc(85vh-180px)] space-y-2">
+              {allPeriodTransactions.length > 0 ? (
+                allPeriodTransactions.map(t => (
+                  <TransactionItem 
+                    key={t.id} 
+                    transaction={t} 
+                    onClick={() => {
+                      setShowEntriesSheet(false);
+                      navigate(`/transaction/${t.id}`);
+                    }}
+                  />
+                ))
+              ) : (
+                <div className="text-center py-12 text-muted-foreground">
+                  <p className="text-sm">No transactions for this period</p>
+                </div>
+              )}
+            </div>
+          </SheetContent>
+        </Sheet>
       </div>
 
       {/* Filters */}

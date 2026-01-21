@@ -1,0 +1,21 @@
+{
+  "name": "Family Finance",
+  "short_name": "Finance",
+  "description": "A comprehensive personal finance app to track expenses, income, savings, loans, and committee contributions.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f8fafc",
+  "theme_color": "#2a9d8f",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/icons/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["finance", "lifestyle", "utilities"],
+  "lang": "en",
+  "dir": "ltr"
+}
