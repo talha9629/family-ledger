@@ -8,6 +8,24 @@ export interface Currency {
   rate: number; // Rate relative to PKR (PKR = 1)
 }
 
+// Account types
+export type AccountType = 'cash' | 'bank' | 'wallet' | 'savings';
+
+export interface Account {
+  id: string;
+  name: string;
+  type: AccountType;
+  bankName?: string; // Only for bank accounts
+  accountNumber?: string; // Last 4 digits for display
+  balance: number;
+  currency: CurrencyCode;
+  icon: string;
+  color: string;
+  isDefault: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
 // Transaction types
 export type TransactionType = 'income' | 'expense' | 'savings';
 
@@ -27,6 +45,7 @@ export interface Transaction {
   category: string;
   description: string;
   date: string;
+  accountId?: string;
   attachmentUrl?: string;
   createdAt: string;
   updatedAt: string;
@@ -169,6 +188,7 @@ export interface FinanceState {
   categories: Category[];
   savingsGoals: SavingsGoal[];
   budgets: Budget[];
+  accounts: Account[];
   defaultCurrency: CurrencyCode;
   chatHistory: ChatMessage[];
 }

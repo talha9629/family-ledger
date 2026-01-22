@@ -6,11 +6,13 @@ import {
   Category, 
   SavingsGoal, 
   Budget,
+  Account,
   CurrencyCode,
   ChatMessage,
   FinanceState
 } from '@/types/finance';
 import { defaultCategories } from '@/data/categories';
+import { defaultAccounts } from '@/data/accounts';
 
 const STORAGE_KEY = 'family-finance-data';
 
@@ -21,6 +23,7 @@ const initialState: FinanceState = {
   categories: defaultCategories,
   savingsGoals: [],
   budgets: [],
+  accounts: defaultAccounts,
   defaultCurrency: 'PKR',
   chatHistory: [],
 };
@@ -399,6 +402,48 @@ export const useFinanceStore = () => {
     }));
   }, []);
 
+  // Account operations
+  const addAccount = useCallback((account: Omit<Account, 'id' | 'createdAt' | 'updatedAt'>) => {
+    const newAccount: Account = {
+      ...account,
+      id: crypto.randomUUID(),
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+    setState(prev => ({
+      ...prev,
+      accounts: [...prev.accounts, newAccount],
+    }));
+    return newAccount;
+  }, []);
+
+  const updateAccount = useCallback((id: string, updates: Partial<Account>) => {
+    setState(prev => ({
+      ...prev,
+      accounts: prev.accounts.map(a => 
+        a.id === id ? { ...a, ...updates, updatedAt: new Date().toISOString() } : a
+      ),
+    }));
+  }, []);
+
+  const deleteAccount = useCallback((id: string) => {
+    setState(prev => ({
+      ...prev,
+      accounts: prev.accounts.filter(a => a.id !== id),
+    }));
+  }, []);
+
+  const setDefaultAccount = useCallback((id: string) => {
+    setState(prev => ({
+      ...prev,
+      accounts: prev.accounts.map(a => ({
+        ...a,
+        isDefault: a.id === id,
+        updatedAt: a.id === id ? new Date().toISOString() : a.updatedAt,
+      })),
+    }));
+  }, []);
+
   // Category operations
   const addCategory = useCallback((category: Omit<Category, 'id'>) => {
     const newCategory: Category = {
@@ -480,6 +525,10 @@ export const useFinanceStore = () => {
     addBudget,
     updateBudget,
     deleteBudget,
+    addAccount,
+    updateAccount,
+    deleteAccount,
+    setDefaultAccount,
     addCategory,
     addChatMessage,
     clearChatHistory,
