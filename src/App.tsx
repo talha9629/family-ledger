@@ -7,6 +7,8 @@ import { FinanceProvider } from "./contexts/FinanceContext";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import { NotificationProvider } from "./contexts/NotificationContext";
 import { AppLayout } from "./components/layout/AppLayout";
+import { PWAInstallPrompt } from "./components/pwa/PWAInstallPrompt";
+import { UpdatePrompt } from "./components/pwa/UpdatePrompt";
 
 // Pages
 import Index from "./pages/Index";
@@ -38,6 +40,8 @@ const App = () => (
           <TooltipProvider>
             <Toaster />
             <Sonner />
+            <PWAInstallPrompt />
+            <UpdatePrompt />
             <BrowserRouter>
               <AppLayout>
                 <Routes>
