@@ -5,7 +5,7 @@ import { currencies } from '@/data/currencies';
 import { CurrencyCode } from '@/types/finance';
 import { 
   ChevronRight, Download, Upload, Trash2, Target, 
-  BarChart2, Coins, Bell, Palette, Wallet, Settings
+  BarChart2, Coins, Bell, Palette, Wallet, Settings, Building2
 } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
@@ -68,6 +68,7 @@ export const MorePage = () => {
     {
       title: 'Quick Access',
       items: [
+        { icon: Building2, label: 'Accounts', path: '/accounts' },
         { icon: Target, label: 'Savings Goals', path: '/goals' },
         { icon: BarChart2, label: 'Analytics', path: '/analytics' },
         { icon: Wallet, label: 'Budget Tracker', path: '/budgets' },

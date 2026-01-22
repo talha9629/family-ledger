@@ -4,6 +4,7 @@ import { useFinance } from '@/contexts/FinanceContext';
 import { TransactionType, CurrencyCode } from '@/types/finance';
 import { getCategoriesByType } from '@/data/categories';
 import { currencies } from '@/data/currencies';
+import { accountTypeConfig } from '@/data/accounts';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -20,13 +21,16 @@ interface TransactionFormProps {
 
 export const TransactionForm = ({ type }: TransactionFormProps) => {
   const navigate = useNavigate();
-  const { addTransaction, defaultCurrency } = useFinance();
+  const { addTransaction, defaultCurrency, accounts } = useFinance();
+  
+  const defaultAccount = accounts.find(a => a.isDefault) || accounts[0];
   
   const [amount, setAmount] = useState('');
   const [currency, setCurrency] = useState<CurrencyCode>(defaultCurrency);
   const [category, setCategory] = useState('');
   const [description, setDescription] = useState('');
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
+  const [accountId, setAccountId] = useState(defaultAccount?.id || '');
   const [attachmentUrl, setAttachmentUrl] = useState<string | undefined>();
 
   const categories = getCategoriesByType(type);
@@ -57,6 +61,7 @@ export const TransactionForm = ({ type }: TransactionFormProps) => {
       category,
       description,
       date,
+      accountId: accountId || undefined,
       attachmentUrl,
     });
 
@@ -135,6 +140,35 @@ export const TransactionForm = ({ type }: TransactionFormProps) => {
           })}
         </div>
       </div>
+
+      {/* Account Selection */}
+      {accounts.length > 0 && (
+        <div className="space-y-2">
+          <Label>Account</Label>
+          <Select value={accountId} onValueChange={setAccountId}>
+            <SelectTrigger>
+              <SelectValue placeholder="Select account" />
+            </SelectTrigger>
+            <SelectContent>
+              {accounts.map(account => {
+                const config = accountTypeConfig[account.type];
+                const IconComponent = (Icons as any)[account.icon] || Icons.Wallet;
+                return (
+                  <SelectItem key={account.id} value={account.id}>
+                    <div className="flex items-center gap-2">
+                      <IconComponent className="h-4 w-4" style={{ color: account.color }} />
+                      <span>{account.name}</span>
+                      {account.bankName && (
+                        <span className="text-xs text-muted-foreground">({account.bankName})</span>
+                      )}
+                    </div>
+                  </SelectItem>
+                );
+              })}
+            </SelectContent>
+          </Select>
+        </div>
+      )}
 
       {/* Date */}
       <div className="space-y-2">

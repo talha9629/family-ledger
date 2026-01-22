@@ -24,6 +24,7 @@ import { AnalyticsPage } from "./pages/AnalyticsPage";
 import { GoalsPage } from "./pages/GoalsPage";
 import { BudgetPage } from "./pages/BudgetPage";
 import { SettingsPage } from "./pages/SettingsPage";
+import { AccountsPage } from "./pages/AccountsPage";
 import { AddTransactionPage } from "./pages/AddTransactionPage";
 import { AddLoanPage } from "./pages/AddLoanPage";
 import { AddCommitteePage } from "./pages/AddCommitteePage";
@@ -58,6 +59,7 @@ const App = () => (
                   <Route path="/goals" element={<GoalsPage />} />
                   <Route path="/budgets" element={<BudgetPage />} />
                   <Route path="/settings" element={<SettingsPage />} />
+                  <Route path="/accounts" element={<AccountsPage />} />
                   {/* Specific add routes must come before the dynamic :type route */}
                   <Route path="/add/loan" element={<AddLoanPage />} />
                   <Route path="/add/committee" element={<AddCommitteePage />} />
