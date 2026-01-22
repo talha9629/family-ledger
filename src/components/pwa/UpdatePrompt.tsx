@@ -1,42 +1,69 @@
 import { useEffect, useState } from "react";
 import { RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useRegisterSW } from "virtual:pwa-register/react";
 
 export const UpdatePrompt = () => {
   const [showPrompt, setShowPrompt] = useState(false);
-
-  const {
-    needRefresh: [needRefresh, setNeedRefresh],
-    updateServiceWorker,
-  } = useRegisterSW({
-    onRegisteredSW(swUrl, r) {
-      console.log("Service Worker registered:", swUrl);
-      // Check for updates every hour
-      if (r) {
-        setInterval(() => {
-          r.update();
-        }, 60 * 60 * 1000);
-      }
-    },
-    onRegisterError(error) {
-      console.error("Service Worker registration error:", error);
-    },
-  });
+  const [registration, setRegistration] = useState<ServiceWorkerRegistration | null>(null);
 
   useEffect(() => {
-    if (needRefresh) {
-      setShowPrompt(true);
+    // Only run on client side after mount
+    if (typeof window === "undefined" || !("serviceWorker" in navigator)) {
+      return;
     }
-  }, [needRefresh]);
+
+    let mounted = true;
+
+    const registerSW = async () => {
+      try {
+        // Dynamically import the PWA register module
+        const { registerSW } = await import("virtual:pwa-register");
+        
+        registerSW({
+          immediate: true,
+          onNeedRefresh() {
+            if (mounted) {
+              setShowPrompt(true);
+            }
+          },
+          onOfflineReady() {
+            console.log("App ready for offline use");
+          },
+          onRegisteredSW(swUrl, r) {
+            console.log("Service Worker registered:", swUrl);
+            if (r && mounted) {
+              setRegistration(r);
+              // Check for updates every hour
+              setInterval(() => {
+                r.update();
+              }, 60 * 60 * 1000);
+            }
+          },
+          onRegisterError(error) {
+            console.error("Service Worker registration error:", error);
+          },
+        });
+      } catch (error) {
+        console.error("Failed to register service worker:", error);
+      }
+    };
+
+    registerSW();
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   const handleUpdate = () => {
-    updateServiceWorker(true);
+    if (registration?.waiting) {
+      registration.waiting.postMessage({ type: "SKIP_WAITING" });
+    }
+    window.location.reload();
     setShowPrompt(false);
   };
 
   const handleDismiss = () => {
-    setNeedRefresh(false);
     setShowPrompt(false);
   };
 
