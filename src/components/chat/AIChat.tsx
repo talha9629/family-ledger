@@ -275,13 +275,24 @@ export const AIChat = () => {
       `Or just tell me about an expense or income naturally!`;
   };
 
+  const MAX_MESSAGE_LENGTH = 500;
+  
   const handleSend = () => {
-    if (!input.trim()) return;
+    const trimmed = input.trim();
+    if (!trimmed) return;
+    
+    // Validate message length
+    if (trimmed.length > MAX_MESSAGE_LENGTH) {
+      // Silently truncate - the store also enforces this limit
+      console.warn(`Message truncated from ${trimmed.length} to ${MAX_MESSAGE_LENGTH} characters`);
+    }
+
+    const messageToSend = trimmed.slice(0, MAX_MESSAGE_LENGTH);
 
     // Add user message
     addChatMessage({
       role: 'user',
-      content: input,
+      content: messageToSend,
     });
 
     setInput('');
@@ -289,7 +300,7 @@ export const AIChat = () => {
 
     // Simulate AI thinking time
     setTimeout(() => {
-      const response = getAIResponse(input);
+      const response = getAIResponse(messageToSend);
       addChatMessage({
         role: 'assistant',
         content: response,
@@ -406,8 +417,9 @@ export const AIChat = () => {
         <div className="flex gap-2">
           <Input
             value={input}
-            onChange={(e) => setInput(e.target.value)}
+            onChange={(e) => setInput(e.target.value.slice(0, MAX_MESSAGE_LENGTH))}
             onKeyDown={(e) => e.key === 'Enter' && handleSend()}
+            maxLength={MAX_MESSAGE_LENGTH}
             placeholder="Type your message..."
             className="flex-1"
           />
