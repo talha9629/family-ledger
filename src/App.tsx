@@ -6,9 +6,11 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { FinanceProvider } from "./contexts/FinanceContext";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import { NotificationProvider } from "./contexts/NotificationContext";
+import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import { AppLayout } from "./components/layout/AppLayout";
 import { PWAInstallPrompt } from "./components/pwa/PWAInstallPrompt";
 import { UpdatePrompt } from "./components/pwa/UpdatePrompt";
+import { LockScreen } from "./components/auth/LockScreen";
 
 // Pages
 import Index from "./pages/Index";
@@ -34,45 +36,63 @@ import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
+// Inner app with auth check
+const AppContent = () => {
+  const { isLocked, isPinSet } = useAuth();
+
+  // Show lock screen if locked and PIN is set
+  if (isLocked && isPinSet) {
+    return <LockScreen mode="unlock" />;
+  }
+
+  return (
+    <>
+      <PWAInstallPrompt />
+      <UpdatePrompt />
+      <BrowserRouter>
+        <AppLayout>
+          <Routes>
+            <Route path="/" element={<Index />} />
+            <Route path="/transactions" element={<TransactionsPage />} />
+            <Route path="/transaction/:id" element={<TransactionDetailPage />} />
+            <Route path="/loans" element={<LoansPage />} />
+            <Route path="/loan/:id" element={<LoanDetailPage />} />
+            <Route path="/committee" element={<CommitteePage />} />
+            <Route path="/committee/:id" element={<CommitteeDetailPage />} />
+            <Route path="/chat" element={<ChatPage />} />
+            <Route path="/more" element={<MorePage />} />
+            <Route path="/analytics" element={<AnalyticsPage />} />
+            <Route path="/goals" element={<GoalsPage />} />
+            <Route path="/budgets" element={<BudgetPage />} />
+            <Route path="/settings" element={<SettingsPage />} />
+            <Route path="/accounts" element={<AccountsPage />} />
+            <Route path="/transfer" element={<TransferPage />} />
+            {/* Specific add routes must come before the dynamic :type route */}
+            <Route path="/add/loan" element={<AddLoanPage />} />
+            <Route path="/add/committee" element={<AddCommitteePage />} />
+            <Route path="/add/goal" element={<AddGoalPage />} />
+            <Route path="/add/:type" element={<AddTransactionPage />} />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </AppLayout>
+      </BrowserRouter>
+    </>
+  );
+};
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <ThemeProvider>
       <NotificationProvider>
-        <FinanceProvider>
-          <TooltipProvider>
-            <Toaster />
-            <Sonner />
-            <PWAInstallPrompt />
-            <UpdatePrompt />
-            <BrowserRouter>
-              <AppLayout>
-                <Routes>
-                  <Route path="/" element={<Index />} />
-                  <Route path="/transactions" element={<TransactionsPage />} />
-                  <Route path="/transaction/:id" element={<TransactionDetailPage />} />
-                  <Route path="/loans" element={<LoansPage />} />
-                  <Route path="/loan/:id" element={<LoanDetailPage />} />
-                  <Route path="/committee" element={<CommitteePage />} />
-                  <Route path="/committee/:id" element={<CommitteeDetailPage />} />
-                  <Route path="/chat" element={<ChatPage />} />
-                  <Route path="/more" element={<MorePage />} />
-                  <Route path="/analytics" element={<AnalyticsPage />} />
-                  <Route path="/goals" element={<GoalsPage />} />
-                  <Route path="/budgets" element={<BudgetPage />} />
-                  <Route path="/settings" element={<SettingsPage />} />
-                  <Route path="/accounts" element={<AccountsPage />} />
-                  <Route path="/transfer" element={<TransferPage />} />
-                  {/* Specific add routes must come before the dynamic :type route */}
-                  <Route path="/add/loan" element={<AddLoanPage />} />
-                  <Route path="/add/committee" element={<AddCommitteePage />} />
-                  <Route path="/add/goal" element={<AddGoalPage />} />
-                  <Route path="/add/:type" element={<AddTransactionPage />} />
-                  <Route path="*" element={<NotFound />} />
-                </Routes>
-              </AppLayout>
-            </BrowserRouter>
-          </TooltipProvider>
-        </FinanceProvider>
+        <AuthProvider>
+          <FinanceProvider>
+            <TooltipProvider>
+              <Toaster />
+              <Sonner />
+              <AppContent />
+            </TooltipProvider>
+          </FinanceProvider>
+        </AuthProvider>
       </NotificationProvider>
     </ThemeProvider>
   </QueryClientProvider>
