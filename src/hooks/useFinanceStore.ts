@@ -444,6 +444,66 @@ export const useFinanceStore = () => {
     }));
   }, []);
 
+  const transferBetweenAccounts = useCallback((
+    fromAccountId: string, 
+    toAccountId: string, 
+    amount: number, 
+    description?: string,
+    date?: string
+  ) => {
+    const transferDate = date || new Date().toISOString().split('T')[0];
+    const fromAccount = state.accounts.find(a => a.id === fromAccountId);
+    const toAccount = state.accounts.find(a => a.id === toAccountId);
+    
+    if (!fromAccount || !toAccount) return null;
+    
+    const transferDescription = description || `Transfer from ${fromAccount.name} to ${toAccount.name}`;
+    
+    // Create withdrawal transaction from source account
+    const withdrawalTransaction: Transaction = {
+      id: crypto.randomUUID(),
+      type: 'expense',
+      amount,
+      currency: fromAccount.currency,
+      category: 'transfer-out',
+      description: `Transfer to ${toAccount.name}${description ? `: ${description}` : ''}`,
+      date: transferDate,
+      accountId: fromAccountId,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+    
+    // Create deposit transaction to destination account
+    const depositTransaction: Transaction = {
+      id: crypto.randomUUID(),
+      type: 'income',
+      amount,
+      currency: toAccount.currency,
+      category: 'transfer-in',
+      description: `Transfer from ${fromAccount.name}${description ? `: ${description}` : ''}`,
+      date: transferDate,
+      accountId: toAccountId,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+    
+    setState(prev => ({
+      ...prev,
+      transactions: [depositTransaction, withdrawalTransaction, ...prev.transactions],
+      accounts: prev.accounts.map(a => {
+        if (a.id === fromAccountId) {
+          return { ...a, balance: a.balance - amount, updatedAt: new Date().toISOString() };
+        }
+        if (a.id === toAccountId) {
+          return { ...a, balance: a.balance + amount, updatedAt: new Date().toISOString() };
+        }
+        return a;
+      }),
+    }));
+    
+    return { withdrawal: withdrawalTransaction, deposit: depositTransaction };
+  }, [state.accounts]);
+
   // Category operations
   const addCategory = useCallback((category: Omit<Category, 'id'>) => {
     const newCategory: Category = {
@@ -529,6 +589,7 @@ export const useFinanceStore = () => {
     updateAccount,
     deleteAccount,
     setDefaultAccount,
+    transferBetweenAccounts,
     addCategory,
     addChatMessage,
     clearChatHistory,

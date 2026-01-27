@@ -2,12 +2,13 @@ import { Plus } from 'lucide-react';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
-import { TrendingUp, TrendingDown, PiggyBank, Users, FileText, X } from 'lucide-react';
+import { TrendingUp, TrendingDown, PiggyBank, Users, FileText, ArrowLeftRight, X } from 'lucide-react';
 
 const actions = [
   { icon: TrendingUp, label: 'Income', path: '/add/income', color: 'bg-income' },
   { icon: TrendingDown, label: 'Expense', path: '/add/expense', color: 'bg-expense' },
   { icon: PiggyBank, label: 'Savings', path: '/add/savings', color: 'bg-savings' },
+  { icon: ArrowLeftRight, label: 'Transfer', path: '/transfer', color: 'bg-primary' },
   { icon: Users, label: 'Loan', path: '/add/loan', color: 'bg-loan' },
   { icon: FileText, label: 'Committee', path: '/add/committee', color: 'bg-committee' },
 ];
