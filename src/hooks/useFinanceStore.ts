@@ -178,14 +178,18 @@ export const useFinanceStore = () => {
       const sizeMB = sizeInBytes / (1024 * 1024);
       
       // Warn if approaching quota limit (typically 5-10MB for localStorage)
-      if (sizeMB > 4) {
+      // Only log in development to avoid exposing storage metrics
+      if (sizeMB > 4 && import.meta.env.DEV) {
         console.warn(`Storage usage: ${sizeMB.toFixed(2)}MB - approaching quota limit`);
       }
       
       localStorage.setItem(STORAGE_KEY, data);
     } catch (error) {
       if (error instanceof DOMException && error.name === 'QuotaExceededError') {
-        console.error('Storage quota exceeded! Attempting cleanup...');
+        // Only log detailed errors in development
+        if (import.meta.env.DEV) {
+          console.error('Storage quota exceeded! Attempting cleanup...');
+        }
         
         // Prune chat history to last 50 messages
         const prunedState = {
@@ -195,13 +199,19 @@ export const useFinanceStore = () => {
         
         try {
           localStorage.setItem(STORAGE_KEY, JSON.stringify(prunedState));
-          console.log('Storage cleanup successful - pruned old chat messages');
+          if (import.meta.env.DEV) {
+            console.log('Storage cleanup successful - pruned old chat messages');
+          }
         } catch (retryError) {
-          console.error('Storage still full after cleanup. Please export and clear old data.');
-          // Optionally could dispatch an event or set a flag for UI notification
+          if (import.meta.env.DEV) {
+            console.error('Storage still full after cleanup. Please export and clear old data.');
+          }
+          // Could dispatch an event or set a flag for UI notification
         }
       } else {
-        console.error('Failed to save to localStorage:', error);
+        if (import.meta.env.DEV) {
+          console.error('Failed to save to localStorage:', error);
+        }
       }
     }
   }, [state]);

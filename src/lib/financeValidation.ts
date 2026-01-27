@@ -197,6 +197,9 @@ export function safeValidateFinanceData(data: unknown): ValidatedFinanceState | 
   if (result.success) {
     return result.data as ValidatedFinanceState;
   }
-  console.error('Validation errors:', result.error.issues);
+  // Only log validation errors in development to avoid leaking data structure
+  if (import.meta.env.DEV) {
+    console.error('Validation errors:', result.error.issues);
+  }
   return null;
 }

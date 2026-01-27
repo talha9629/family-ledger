@@ -283,8 +283,10 @@ export const AIChat = () => {
     
     // Validate message length
     if (trimmed.length > MAX_MESSAGE_LENGTH) {
-      // Silently truncate - the store also enforces this limit
-      console.warn(`Message truncated from ${trimmed.length} to ${MAX_MESSAGE_LENGTH} characters`);
+      // Silently truncate - only log in development
+      if (import.meta.env.DEV) {
+        console.warn(`Message truncated from ${trimmed.length} to ${MAX_MESSAGE_LENGTH} characters`);
+      }
     }
 
     const messageToSend = trimmed.slice(0, MAX_MESSAGE_LENGTH);
