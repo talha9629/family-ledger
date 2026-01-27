@@ -7,8 +7,10 @@ import {
   hashPin, 
   verifyPin 
 } from '@/lib/crypto';
+import { migrateToEncrypted, migrateToUnencrypted, reEncrypt } from '@/lib/encryptedStorage';
 
 const PIN_HASH_KEY = 'finance-app-pin-hash';
+const FINANCE_DATA_KEY = 'family-finance-data';
 const AUTO_LOCK_TIMEOUT = 5 * 60 * 1000; // 5 minutes
 
 interface AuthContextType {
@@ -112,6 +114,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     localStorage.setItem(PIN_HASH_KEY, pinHash);
     
     const key = await deriveKeyFromPin(pin, salt);
+    
+    // Migrate existing unencrypted data to encrypted format
+    await migrateToEncrypted(FINANCE_DATA_KEY, key);
+    
     setEncryptionKey(key);
     setIsPinSet(true);
     setIsLocked(false);
@@ -132,6 +138,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return false;
     }
 
+    // Derive old key for re-encryption
+    const oldKey = await deriveKeyFromPin(oldPin, salt);
+
     // Generate new salt and hash for new PIN
     const newSalt = generateSalt();
     storeSalt(newSalt);
@@ -140,6 +149,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     localStorage.setItem(PIN_HASH_KEY, newPinHash);
     
     const newKey = await deriveKeyFromPin(newPin, newSalt);
+    
+    // Re-encrypt data with new key
+    await reEncrypt(FINANCE_DATA_KEY, oldKey, newKey);
+    
     setEncryptionKey(newKey);
     setLastActivity(Date.now());
     
@@ -159,6 +172,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (!isValid) {
       return false;
     }
+
+    // Derive key to decrypt data before removing encryption
+    const key = await deriveKeyFromPin(currentPin, salt);
+    
+    // Migrate encrypted data back to unencrypted
+    await migrateToUnencrypted(FINANCE_DATA_KEY, key);
 
     localStorage.removeItem(PIN_HASH_KEY);
     localStorage.removeItem('finance-app-salt');
