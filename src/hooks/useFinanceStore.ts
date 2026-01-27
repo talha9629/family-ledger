@@ -206,19 +206,57 @@ export const useFinanceStore = () => {
   }, []);
 
   // Loan operations
-  const addLoan = useCallback((loan: Omit<Loan, 'id' | 'payments' | 'isSettled' | 'createdAt' | 'updatedAt'>) => {
+  const addLoan = useCallback((loan: Omit<Loan, 'id' | 'payments' | 'isSettled' | 'createdAt' | 'updatedAt' | 'transactionId'>) => {
+    const loanId = crypto.randomUUID();
+    const transactionId = crypto.randomUUID();
+    
+    // Create corresponding transaction
+    // If loan is 'taken' (borrowed), it's income for us
+    // If loan is 'given' (lent), it's expense for us
+    const transaction: Transaction = {
+      id: transactionId,
+      type: loan.type === 'taken' ? 'income' : 'expense',
+      amount: loan.amount,
+      currency: loan.currency,
+      category: loan.type === 'taken' ? 'loan-received' : 'loan-given',
+      description: loan.type === 'taken' 
+        ? `Loan received from ${loan.personName}${loan.reason ? `: ${loan.reason}` : ''}`
+        : `Loan given to ${loan.personName}${loan.reason ? `: ${loan.reason}` : ''}`,
+      date: loan.date,
+      accountId: loan.accountId,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+
     const newLoan: Loan = {
       ...loan,
-      id: crypto.randomUUID(),
+      id: loanId,
+      transactionId,
       payments: [],
       isSettled: false,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };
-    setState(prev => ({
-      ...prev,
-      loans: [newLoan, ...prev.loans],
-    }));
+
+    setState(prev => {
+      // Update account balance if accountId provided
+      const updatedAccounts = loan.accountId 
+        ? prev.accounts.map(a => {
+            if (a.id === loan.accountId) {
+              const balanceChange = loan.type === 'taken' ? loan.amount : -loan.amount;
+              return { ...a, balance: a.balance + balanceChange, updatedAt: new Date().toISOString() };
+            }
+            return a;
+          })
+        : prev.accounts;
+
+      return {
+        ...prev,
+        loans: [newLoan, ...prev.loans],
+        transactions: [transaction, ...prev.transactions],
+        accounts: updatedAccounts,
+      };
+    });
     return newLoan;
   }, []);
 
@@ -232,29 +270,82 @@ export const useFinanceStore = () => {
   }, []);
 
   const deleteLoan = useCallback((id: string) => {
-    setState(prev => ({
-      ...prev,
-      loans: prev.loans.filter(l => l.id !== id),
-    }));
+    setState(prev => {
+      const loan = prev.loans.find(l => l.id === id);
+      if (!loan) return prev;
+
+      // Get all transaction IDs to remove (loan + payments)
+      const transactionIdsToRemove = [
+        loan.transactionId,
+        ...loan.payments.map(p => p.transactionId)
+      ].filter(Boolean) as string[];
+
+      return {
+        ...prev,
+        loans: prev.loans.filter(l => l.id !== id),
+        transactions: prev.transactions.filter(t => !transactionIdsToRemove.includes(t.id)),
+      };
+    });
   }, []);
 
-  const addLoanPayment = useCallback((loanId: string, amount: number, date: string, note?: string) => {
+  const addLoanPayment = useCallback((
+    loanId: string, 
+    amount: number, 
+    date: string, 
+    note?: string,
+    accountId?: string
+  ) => {
     setState(prev => {
       const loan = prev.loans.find(l => l.id === loanId);
       if (!loan) return prev;
 
+      const paymentId = crypto.randomUUID();
+      const transactionId = crypto.randomUUID();
+      const effectiveAccountId = accountId || loan.accountId;
+
+      // Create corresponding transaction
+      // If loan is 'taken' (we borrowed), payment is expense (we're paying back)
+      // If loan is 'given' (we lent), payment is income (we're receiving back)
+      const transaction: Transaction = {
+        id: transactionId,
+        type: loan.type === 'taken' ? 'expense' : 'income',
+        amount,
+        currency: loan.currency,
+        category: loan.type === 'taken' ? 'loan-repayment' : 'loan-received-back',
+        description: loan.type === 'taken' 
+          ? `Loan repayment to ${loan.personName}${note ? `: ${note}` : ''}`
+          : `Loan repayment from ${loan.personName}${note ? `: ${note}` : ''}`,
+        date,
+        accountId: effectiveAccountId,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
+
       const newPayment = {
-        id: crypto.randomUUID(),
+        id: paymentId,
         loanId,
         amount,
         date,
         note,
+        accountId: effectiveAccountId,
+        transactionId,
         createdAt: new Date().toISOString(),
       };
 
       const updatedPayments = [...loan.payments, newPayment];
       const totalPaid = updatedPayments.reduce((sum, p) => sum + p.amount, 0);
       const isSettled = totalPaid >= loan.amount;
+
+      // Update account balance if accountId provided
+      const updatedAccounts = effectiveAccountId 
+        ? prev.accounts.map(a => {
+            if (a.id === effectiveAccountId) {
+              const balanceChange = loan.type === 'taken' ? -amount : amount;
+              return { ...a, balance: a.balance + balanceChange, updatedAt: new Date().toISOString() };
+            }
+            return a;
+          })
+        : prev.accounts;
 
       return {
         ...prev,
@@ -263,6 +354,8 @@ export const useFinanceStore = () => {
             ? { ...l, payments: updatedPayments, isSettled, updatedAt: new Date().toISOString() } 
             : l
         ),
+        transactions: [transaction, ...prev.transactions],
+        accounts: updatedAccounts,
       };
     });
   }, []);

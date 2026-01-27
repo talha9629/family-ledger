@@ -9,12 +9,15 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Camera, X, ArrowUpRight, ArrowDownLeft } from 'lucide-react';
+import * as Icons from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 
 export const LoanForm = () => {
   const navigate = useNavigate();
-  const { addLoan, defaultCurrency } = useFinance();
+  const { addLoan, defaultCurrency, accounts } = useFinance();
+  
+  const defaultAccount = accounts.find(a => a.isDefault) || accounts[0];
   
   const [loanType, setLoanType] = useState<LoanType>('given');
   const [personName, setPersonName] = useState('');
@@ -23,6 +26,7 @@ export const LoanForm = () => {
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
   const [dueDate, setDueDate] = useState('');
   const [reason, setReason] = useState('');
+  const [accountId, setAccountId] = useState(defaultAccount?.id || '');
   const [attachmentUrl, setAttachmentUrl] = useState<string | undefined>();
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -52,6 +56,7 @@ export const LoanForm = () => {
       date,
       dueDate: dueDate || undefined,
       reason,
+      accountId: accountId || undefined,
       attachmentUrl,
     });
 
@@ -147,6 +152,39 @@ export const LoanForm = () => {
           />
         </div>
       </div>
+
+      {/* Account Selection */}
+      {accounts.length > 0 && (
+        <div className="space-y-2">
+          <Label>Account</Label>
+          <Select value={accountId} onValueChange={setAccountId}>
+            <SelectTrigger>
+              <SelectValue placeholder="Select account" />
+            </SelectTrigger>
+            <SelectContent>
+              {accounts.map(account => {
+                const IconComponent = (Icons as any)[account.icon] || Icons.Wallet;
+                return (
+                  <SelectItem key={account.id} value={account.id}>
+                    <div className="flex items-center gap-2">
+                      <IconComponent className="h-4 w-4" style={{ color: account.color }} />
+                      <span>{account.name}</span>
+                      {account.bankName && (
+                        <span className="text-xs text-muted-foreground">({account.bankName})</span>
+                      )}
+                    </div>
+                  </SelectItem>
+                );
+              })}
+            </SelectContent>
+          </Select>
+          <p className="text-xs text-muted-foreground">
+            {loanType === 'taken' 
+              ? 'The borrowed amount will be added to this account' 
+              : 'The lent amount will be deducted from this account'}
+          </p>
+        </div>
+      )}
 
       {/* Dates */}
       <div className="grid grid-cols-2 gap-4">

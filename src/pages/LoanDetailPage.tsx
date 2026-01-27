@@ -111,7 +111,8 @@ export const LoanDetailPage = () => {
       loan.id, 
       parseFloat(paymentAmount), 
       paymentDate.toISOString().split('T')[0],
-      paymentNote || undefined
+      paymentNote || undefined,
+      loan.accountId // Use the same account as the original loan
     );
 
     toast.success('Payment recorded!');
