@@ -13,6 +13,7 @@ import {
 } from '@/types/finance';
 import { defaultCategories } from '@/data/categories';
 import { defaultAccounts } from '@/data/accounts';
+import { safeValidateFinanceData } from '@/lib/financeValidation';
 
 const STORAGE_KEY = 'family-finance-data';
 
@@ -644,12 +645,22 @@ export const useFinanceStore = () => {
     return JSON.stringify(state, null, 2);
   }, [state]);
 
-  const importData = useCallback((jsonData: string) => {
+  const importData = useCallback((jsonData: string): boolean => {
     try {
       const parsed = JSON.parse(jsonData);
-      setState(parsed);
+      
+      // Validate the parsed data against the schema
+      const validatedData = safeValidateFinanceData(parsed);
+      
+      if (validatedData === null) {
+        return false;
+      }
+      
+      // Only set state if validation passes - cast to FinanceState as validated data matches the type
+      setState(validatedData as FinanceState);
       return true;
-    } catch {
+    } catch (error) {
+      console.error('Import parsing failed:', error);
       return false;
     }
   }, []);
