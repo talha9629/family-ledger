@@ -3,12 +3,20 @@ import { useNavigate } from 'react-router-dom';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useNotifications } from '@/contexts/NotificationContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Sun, Moon, Monitor, Bell, Clock, Target, Wallet, Users, HandCoins, Save } from 'lucide-react';
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogDescription, 
+  DialogHeader, 
+  DialogTitle 
+} from '@/components/ui/dialog';
+import { Sun, Moon, Monitor, Bell, Clock, Target, Wallet, Users, HandCoins, Save, Shield, Lock, Eye, EyeOff } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 
@@ -16,6 +24,16 @@ export const SettingsPage = () => {
   const navigate = useNavigate();
   const { theme, setTheme } = useTheme();
   const { settings, updateSettings } = useNotifications();
+  const { isPinSet, setPin, changePin, removePin, lock } = useAuth();
+  
+  // PIN dialog states
+  const [showPinDialog, setShowPinDialog] = useState(false);
+  const [pinDialogMode, setPinDialogMode] = useState<'set' | 'change' | 'remove'>('set');
+  const [currentPin, setCurrentPin] = useState('');
+  const [newPin, setNewPin] = useState('');
+  const [confirmPin, setConfirmPin] = useState('');
+  const [showPins, setShowPins] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
 
   const themeOptions = [
     { value: 'light', label: 'Light', icon: Sun },
@@ -28,11 +46,125 @@ export const SettingsPage = () => {
     navigate('/more');
   };
 
+  const openPinDialog = (mode: 'set' | 'change' | 'remove') => {
+    setPinDialogMode(mode);
+    setCurrentPin('');
+    setNewPin('');
+    setConfirmPin('');
+    setShowPins(false);
+    setShowPinDialog(true);
+  };
+
+  const handlePinAction = async () => {
+    setIsProcessing(true);
+
+    try {
+      if (pinDialogMode === 'set') {
+        if (newPin.length < 4) {
+          toast.error('PIN must be at least 4 digits');
+          return;
+        }
+        if (newPin !== confirmPin) {
+          toast.error('PINs do not match');
+          return;
+        }
+        await setPin(newPin);
+        toast.success('PIN set successfully! Your data is now protected.');
+        setShowPinDialog(false);
+      } else if (pinDialogMode === 'change') {
+        if (newPin.length < 4) {
+          toast.error('New PIN must be at least 4 digits');
+          return;
+        }
+        if (newPin !== confirmPin) {
+          toast.error('New PINs do not match');
+          return;
+        }
+        const success = await changePin(currentPin, newPin);
+        if (success) {
+          toast.success('PIN changed successfully!');
+          setShowPinDialog(false);
+        } else {
+          toast.error('Current PIN is incorrect');
+        }
+      } else if (pinDialogMode === 'remove') {
+        const success = await removePin(currentPin);
+        if (success) {
+          toast.success('PIN removed. Your data is no longer protected.');
+          setShowPinDialog(false);
+        } else {
+          toast.error('Current PIN is incorrect');
+        }
+      }
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
   return (
     <div className="page-enter pb-6">
       <PageHeader title="Settings" showBack />
 
       <div className="px-4 space-y-6">
+        {/* Security Section */}
+        <div className="space-y-4">
+          <h3 className="font-semibold flex items-center gap-2">
+            <Shield className="h-4 w-4" />
+            Security
+          </h3>
+          <div className="bg-card rounded-2xl p-4 shadow-card space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-primary/10">
+                  <Lock className="h-4 w-4 text-primary" />
+                </div>
+                <div className="space-y-0.5">
+                  <Label className="text-sm">PIN Protection</Label>
+                  <p className="text-xs text-muted-foreground">
+                    {isPinSet ? 'Your data is protected' : 'Protect your financial data'}
+                  </p>
+                </div>
+              </div>
+              <Switch
+                checked={isPinSet}
+                onCheckedChange={(checked) => {
+                  if (checked) {
+                    openPinDialog('set');
+                  } else {
+                    openPinDialog('remove');
+                  }
+                }}
+              />
+            </div>
+
+            {isPinSet && (
+              <>
+                <div className="border-t pt-4 space-y-2">
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={() => openPinDialog('change')}
+                    className="w-full"
+                  >
+                    Change PIN
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={lock}
+                    className="w-full"
+                  >
+                    Lock App Now
+                  </Button>
+                </div>
+                <p className="text-xs text-muted-foreground text-center">
+                  App auto-locks after 5 minutes of inactivity
+                </p>
+              </>
+            )}
+          </div>
+        </div>
+
         {/* Appearance Section */}
         <div className="space-y-4">
           <h3 className="font-semibold flex items-center gap-2">
@@ -206,6 +338,101 @@ export const SettingsPage = () => {
           Save Settings
         </Button>
       </div>
+
+      {/* PIN Dialog */}
+      <Dialog open={showPinDialog} onOpenChange={setShowPinDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>
+              {pinDialogMode === 'set' && 'Set PIN'}
+              {pinDialogMode === 'change' && 'Change PIN'}
+              {pinDialogMode === 'remove' && 'Remove PIN'}
+            </DialogTitle>
+            <DialogDescription>
+              {pinDialogMode === 'set' && 'Create a PIN to protect your financial data.'}
+              {pinDialogMode === 'change' && 'Enter your current PIN and new PIN.'}
+              {pinDialogMode === 'remove' && 'Enter your current PIN to remove protection.'}
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 py-4">
+            {(pinDialogMode === 'change' || pinDialogMode === 'remove') && (
+              <div className="space-y-2">
+                <Label>Current PIN</Label>
+                <div className="relative">
+                  <Input
+                    type={showPins ? 'text' : 'password'}
+                    inputMode="numeric"
+                    pattern="[0-9]*"
+                    value={currentPin}
+                    onChange={(e) => setCurrentPin(e.target.value.replace(/\D/g, '').slice(0, 8))}
+                    placeholder="Enter current PIN"
+                    className="pr-10"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPins(!showPins)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  >
+                    {showPins ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {(pinDialogMode === 'set' || pinDialogMode === 'change') && (
+              <>
+                <div className="space-y-2">
+                  <Label>{pinDialogMode === 'change' ? 'New PIN' : 'PIN'}</Label>
+                  <Input
+                    type={showPins ? 'text' : 'password'}
+                    inputMode="numeric"
+                    pattern="[0-9]*"
+                    value={newPin}
+                    onChange={(e) => setNewPin(e.target.value.replace(/\D/g, '').slice(0, 8))}
+                    placeholder="Enter PIN (min 4 digits)"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Confirm PIN</Label>
+                  <Input
+                    type={showPins ? 'text' : 'password'}
+                    inputMode="numeric"
+                    pattern="[0-9]*"
+                    value={confirmPin}
+                    onChange={(e) => setConfirmPin(e.target.value.replace(/\D/g, '').slice(0, 8))}
+                    placeholder="Confirm PIN"
+                  />
+                </div>
+              </>
+            )}
+
+            {pinDialogMode === 'set' && (
+              <p className="text-xs text-muted-foreground">
+                ⚠️ Remember your PIN! If forgotten, you'll need to clear app data to regain access.
+              </p>
+            )}
+          </div>
+
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={() => setShowPinDialog(false)} className="flex-1">
+              Cancel
+            </Button>
+            <Button 
+              onClick={handlePinAction} 
+              disabled={isProcessing}
+              className="flex-1"
+              variant={pinDialogMode === 'remove' ? 'destructive' : 'default'}
+            >
+              {isProcessing ? 'Processing...' : (
+                pinDialogMode === 'remove' ? 'Remove PIN' : 
+                pinDialogMode === 'change' ? 'Change PIN' : 'Set PIN'
+              )}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
