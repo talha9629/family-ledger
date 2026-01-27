@@ -1,5 +1,12 @@
 import { z } from 'zod';
 
+// Strict CSS color validation pattern
+// Supports: #RGB, #RRGGBB, #RRGGBBAA, rgb(), rgba(), hsl(), hsla()
+const CSS_COLOR_PATTERN = /^(#[0-9A-Fa-f]{3,8}|rgb\(\s*\d{1,3}\s*,\s*\d{1,3}\s*,\s*\d{1,3}\s*\)|rgba\(\s*\d{1,3}\s*,\s*\d{1,3}\s*,\s*\d{1,3}\s*,\s*(?:0|1|0?\.\d+)\s*\)|hsl\(\s*\d{1,3}\s*,\s*\d{1,3}%\s*,\s*\d{1,3}%\s*\)|hsla\(\s*\d{1,3}\s*,\s*\d{1,3}%\s*,\s*\d{1,3}%\s*,\s*(?:0|1|0?\.\d+)\s*\))$/;
+
+// Safe color schema with format validation
+const SafeColorSchema = z.string().max(50).regex(CSS_COLOR_PATTERN, "Invalid color format");
+
 // Currency codes validation
 const CurrencyCodeSchema = z.enum(['PKR', 'USD', 'EUR', 'GBP', 'AED', 'SAR', 'INR']);
 
@@ -25,7 +32,7 @@ const AccountSchema = z.object({
   balance: z.number(),
   currency: CurrencyCodeSchema,
   icon: z.string().max(50),
-  color: z.string().max(50),
+  color: SafeColorSchema,
   isDefault: z.boolean(),
   createdAt: z.string(),
   updatedAt: z.string(),
@@ -37,7 +44,7 @@ const CategorySchema = z.object({
   name: z.string().min(1).max(100),
   icon: z.string().max(50),
   type: TransactionTypeSchema,
-  color: z.string().max(50),
+  color: SafeColorSchema,
 });
 
 // Transaction schema
@@ -133,7 +140,7 @@ const SavingsGoalSchema = z.object({
   currency: CurrencyCodeSchema,
   deadline: z.string().optional(),
   icon: z.string().max(50),
-  color: z.string().max(50),
+  color: SafeColorSchema,
   createdAt: z.string(),
   updatedAt: z.string(),
 });
