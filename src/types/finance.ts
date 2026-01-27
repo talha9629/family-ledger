@@ -60,6 +60,8 @@ export interface LoanPayment {
   amount: number;
   date: string;
   note?: string;
+  accountId?: string;
+  transactionId?: string;
   createdAt: string;
 }
 
@@ -73,6 +75,8 @@ export interface Loan {
   dueDate?: string;
   reason?: string;
   attachmentUrl?: string;
+  accountId?: string;
+  transactionId?: string;
   payments: LoanPayment[];
   isSettled: boolean;
   createdAt: string;
