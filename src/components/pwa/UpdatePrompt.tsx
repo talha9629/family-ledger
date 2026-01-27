@@ -27,10 +27,16 @@ export const UpdatePrompt = () => {
             }
           },
           onOfflineReady() {
-            console.log("App ready for offline use");
+            // Only log in development
+            if (import.meta.env.DEV) {
+              console.log("App ready for offline use");
+            }
           },
           onRegisteredSW(swUrl, r) {
-            console.log("Service Worker registered:", swUrl);
+            // Only log in development
+            if (import.meta.env.DEV) {
+              console.log("Service Worker registered:", swUrl);
+            }
             if (r && mounted) {
               setRegistration(r);
               // Check for updates every hour
@@ -40,11 +46,17 @@ export const UpdatePrompt = () => {
             }
           },
           onRegisterError(error) {
-            console.error("Service Worker registration error:", error);
+            // Only log in development
+            if (import.meta.env.DEV) {
+              console.error("Service Worker registration error:", error);
+            }
           },
         });
       } catch (error) {
-        console.error("Failed to register service worker:", error);
+        // Only log in development
+        if (import.meta.env.DEV) {
+          console.error("Failed to register service worker:", error);
+        }
       }
     };
 
