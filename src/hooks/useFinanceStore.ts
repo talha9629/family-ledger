@@ -170,9 +170,40 @@ export const useFinanceStore = () => {
     };
   });
 
-  // Save to localStorage whenever state changes
+  // Save to localStorage whenever state changes with quota management
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    try {
+      const data = JSON.stringify(state);
+      const sizeInBytes = new Blob([data]).size;
+      const sizeMB = sizeInBytes / (1024 * 1024);
+      
+      // Warn if approaching quota limit (typically 5-10MB for localStorage)
+      if (sizeMB > 4) {
+        console.warn(`Storage usage: ${sizeMB.toFixed(2)}MB - approaching quota limit`);
+      }
+      
+      localStorage.setItem(STORAGE_KEY, data);
+    } catch (error) {
+      if (error instanceof DOMException && error.name === 'QuotaExceededError') {
+        console.error('Storage quota exceeded! Attempting cleanup...');
+        
+        // Prune chat history to last 50 messages
+        const prunedState = {
+          ...state,
+          chatHistory: state.chatHistory.slice(-50),
+        };
+        
+        try {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(prunedState));
+          console.log('Storage cleanup successful - pruned old chat messages');
+        } catch (retryError) {
+          console.error('Storage still full after cleanup. Please export and clear old data.');
+          // Optionally could dispatch an event or set a flag for UI notification
+        }
+      } else {
+        console.error('Failed to save to localStorage:', error);
+      }
+    }
   }, [state]);
 
   // Transaction operations
@@ -611,17 +642,35 @@ export const useFinanceStore = () => {
     return newCategory;
   }, []);
 
-  // Chat operations
+  // Chat operations with automatic pruning
+  const MAX_CHAT_MESSAGES = 100;
+  
   const addChatMessage = useCallback((message: Omit<ChatMessage, 'id' | 'timestamp'>) => {
+    // Validate message content length (max 500 characters for user messages)
+    const trimmedContent = message.content.trim();
+    if (message.role === 'user' && trimmedContent.length > 500) {
+      console.warn('Message too long, truncating to 500 characters');
+    }
+    
     const newMessage: ChatMessage = {
       ...message,
+      content: message.role === 'user' ? trimmedContent.slice(0, 500) : message.content,
       id: crypto.randomUUID(),
       timestamp: new Date().toISOString(),
     };
-    setState(prev => ({
-      ...prev,
-      chatHistory: [...prev.chatHistory, newMessage],
-    }));
+    
+    setState(prev => {
+      // Auto-prune if history exceeds max messages
+      const updatedHistory = [...prev.chatHistory, newMessage];
+      const prunedHistory = updatedHistory.length > MAX_CHAT_MESSAGES
+        ? updatedHistory.slice(-MAX_CHAT_MESSAGES)
+        : updatedHistory;
+      
+      return {
+        ...prev,
+        chatHistory: prunedHistory,
+      };
+    });
     return newMessage;
   }, []);
 
